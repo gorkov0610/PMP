@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,10 +29,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import pmp.zadaca1.ui.theme.Zadaca1Theme
 
@@ -41,24 +40,39 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Zadaca1Theme {
-                Scaffold( modifier = Modifier.fillMaxSize() ) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Scaffold(
+                    bottomBar = {
+                        Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        ){
+                            Button(
+                                onClick = {},
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                            ) {
+                                Text("Clear Tags")
+                            }
+                        }
+                    }
+                ) {
+                    innerPadding -> Screen(modifier = Modifier.padding(innerPadding))
                 }
+
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun Screen(modifier : Modifier = Modifier) {
     var searchQuery by remember { mutableStateOf("") }
     var tagQuery by remember {mutableStateOf("")}
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(6)
+        columns = GridCells.Fixed(6),
+        modifier = modifier
     ) {
         item(span = {GridItemSpan(6)}){
             Box(
@@ -81,63 +95,202 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
+                    disabledIndicatorColor = Color.Transparent,
                 ),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
+                modifier = Modifier.fillMaxSize()
             )
         }
-        item(span = {GridItemSpan(4)}){
-            TextField(
-                value = tagQuery,
-                placeholder = {Text("Tag your query")},
-                onValueChange = {tagQuery = it},
-                shape = RoundedCornerShape(50),
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
-                ),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
-            )
-        }
-        item(span = {GridItemSpan(2)}){
-            Button({}, modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp)) {
-                Text("Save")
+        item(span = {GridItemSpan(6)}){
+            Row(
+                modifier = Modifier.
+                fillMaxWidth().padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                TextField(
+                    value = tagQuery,
+                    placeholder = { Text("Tag your query") },
+                    onValueChange = { tagQuery = it },
+                    shape = RoundedCornerShape(50),
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent
+                    ),
+                    modifier = Modifier.weight(4f).height(56.dp)
+                )
+                Button({}, modifier = Modifier
+                    .weight(2f)
+                    .height(56.dp)
+                ) {
+                    Text("Save")
+                }
             }
         }
         item(span = {GridItemSpan(6)}){
             Row(
                 modifier = Modifier.
-                background(Color.Yellow)
+                background(MaterialTheme.colorScheme.tertiaryContainer),
+                horizontalArrangement = Arrangement.Center
+            ){
+                Text("Tagged searches",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    )
+            }
+        }
+        item(span = {GridItemSpan(6)}){
+            Row(
+                modifier = Modifier.
+                background(MaterialTheme.colorScheme.tertiaryContainer),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ){
                 Button(
                     onClick = {},
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color.Black
-                    )
+                        containerColor = MaterialTheme.colorScheme.inversePrimary
+                    ),
+                    modifier = Modifier.weight(2f)
                 ) {
-                    Text("hi")
+                    Text("Android FP")
                 }
                 Button(
                     onClick = {},
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color.Black
+                        containerColor = MaterialTheme.colorScheme.surfaceTint
                     )
                 ) {
-                    Text("hi")
+                    Text("Edit")
                 }
             }
         }
 
-    }
-}
+        item(span = {GridItemSpan(6)}){
+            Row(
+                modifier = Modifier.
+                background(MaterialTheme.colorScheme.tertiaryContainer),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.inversePrimary
+                    ),
+                    modifier = Modifier.weight(2f)
+                ) {
+                    Text("Deitel")
+                }
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceTint
+                    )
+                ) {
+                    Text("Edit")
+                }
+            }
+        }
+        item(span = {GridItemSpan(6)}){
+            Row(
+                modifier = Modifier.
+                background(MaterialTheme.colorScheme.tertiaryContainer),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.inversePrimary
+                    ),
+                    modifier = Modifier.weight(2f)
+                ) {
+                    Text("Google")
+                }
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceTint
+                    )
+                ) {
+                    Text("Edit")
+                }
+            }
+        }
+        item(span = {GridItemSpan(6)}){
+            Row(
+                modifier = Modifier.
+                background(MaterialTheme.colorScheme.tertiaryContainer),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.inversePrimary
+                    ),
+                    modifier = Modifier.weight(2f)
+                ) {
+                    Text("iPhoneFP")
+                }
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceTint
+                    )
+                ) {
+                    Text("Edit")
+                }
+            }
+        }
+        item(span = {GridItemSpan(6)}){
+            Row(
+                modifier = Modifier.
+                background(MaterialTheme.colorScheme.tertiaryContainer),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.inversePrimary,
+                        //contentColor = Color.Black
+                    ),
+                    modifier = Modifier.weight(2f)
+                ) {
+                    Text("JavaFP")
+                }
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceTint
+                    )
+                ) {
+                    Text("Edit")
+                }
+            }
+        }
+        item(span = {GridItemSpan(6)}){
+            Row(
+                modifier = Modifier.
+                background(MaterialTheme.colorScheme.tertiaryContainer),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.inversePrimary
+                    ),
+                    modifier = Modifier.weight(2f)
+                ) {
+                    Text("JavaHTP")
+                }
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceTint
+                    )
+                ) {
+                    Text("Edit")
+                }
+            }
+        }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Zadaca1Theme {
-        Greeting("Android")
+
     }
 }

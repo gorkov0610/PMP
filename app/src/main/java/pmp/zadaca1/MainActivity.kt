@@ -13,9 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -43,8 +42,8 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     bottomBar = {
                         Box(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
+                            .fillMaxWidth()
+                            .padding(16.dp)
                         ){
                             Button(
                                 onClick = {},
@@ -69,16 +68,15 @@ class MainActivity : ComponentActivity() {
 fun Screen(modifier : Modifier = Modifier) {
     var searchQuery by remember { mutableStateOf("") }
     var tagQuery by remember {mutableStateOf("")}
+    val favourites = listOf("Android FP", "Deitel", "Google", "iPhoneFP", "JavaFP", "JavaHTP")
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(6),
+    LazyColumn(
         modifier = modifier
     ) {
-        item(span = {GridItemSpan(6)}){
+        item {
             Box(
-                modifier = Modifier.
-                statusBarsPadding()
-            ){
+                modifier = Modifier.statusBarsPadding()
+            ) {
                 Text(
                     text = "Favorite X Searches",
                     style = MaterialTheme.typography.titleLarge,
@@ -86,11 +84,11 @@ fun Screen(modifier : Modifier = Modifier) {
                 )
             }
         }
-        item(span = { GridItemSpan(6) }) {
+        item {
             TextField(
                 value = searchQuery,
-                placeholder = {Text("Enter X search query here")},
-                onValueChange = {searchQuery = it},
+                placeholder = { Text("Enter X search query here") },
+                onValueChange = { searchQuery = it },
                 shape = RoundedCornerShape(50),
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
@@ -100,12 +98,13 @@ fun Screen(modifier : Modifier = Modifier) {
                 modifier = Modifier.fillMaxSize()
             )
         }
-        item(span = {GridItemSpan(6)}){
+        item {
             Row(
-                modifier = Modifier.
-                fillMaxWidth().padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
+            ) {
                 TextField(
                     value = tagQuery,
                     placeholder = { Text("Tag your query") },
@@ -116,20 +115,23 @@ fun Screen(modifier : Modifier = Modifier) {
                         unfocusedIndicatorColor = Color.Transparent,
                         disabledIndicatorColor = Color.Transparent
                     ),
-                    modifier = Modifier.weight(4f).height(56.dp)
+                    modifier = Modifier
+                        .weight(4f)
+                        .height(56.dp)
                 )
-                Button({}, modifier = Modifier
-                    .weight(2f)
-                    .height(56.dp)
+                Button(
+                    {}, modifier = Modifier
+                        .weight(2f)
+                        .height(56.dp)
                 ) {
                     Text("Save")
                 }
             }
         }
-        item(span = {GridItemSpan(6)}){
+        item{
             Row(
                 modifier = Modifier.
-                background(MaterialTheme.colorScheme.tertiaryContainer),
+                background(MaterialTheme.colorScheme.tertiaryContainer).fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ){
                 Text("Tagged searches",
@@ -138,12 +140,11 @@ fun Screen(modifier : Modifier = Modifier) {
                     )
             }
         }
-        item(span = {GridItemSpan(6)}){
+        items(favourites){ tweet ->
             Row(
-                modifier = Modifier.
-                background(MaterialTheme.colorScheme.tertiaryContainer),
+                modifier = Modifier.background(MaterialTheme.colorScheme.tertiaryContainer),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
+            ) {
                 Button(
                     onClick = {},
                     colors = ButtonDefaults.buttonColors(
@@ -151,7 +152,7 @@ fun Screen(modifier : Modifier = Modifier) {
                     ),
                     modifier = Modifier.weight(2f)
                 ) {
-                    Text("Android FP")
+                    Text(tweet, maxLines = 1)
                 }
                 Button(
                     onClick = {},
@@ -159,134 +160,7 @@ fun Screen(modifier : Modifier = Modifier) {
                         containerColor = MaterialTheme.colorScheme.surfaceTint
                     )
                 ) {
-                    Text("Edit")
-                }
-            }
-        }
-
-        item(span = {GridItemSpan(6)}){
-            Row(
-                modifier = Modifier.
-                background(MaterialTheme.colorScheme.tertiaryContainer),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.inversePrimary
-                    ),
-                    modifier = Modifier.weight(2f)
-                ) {
-                    Text("Deitel")
-                }
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceTint
-                    )
-                ) {
-                    Text("Edit")
-                }
-            }
-        }
-        item(span = {GridItemSpan(6)}){
-            Row(
-                modifier = Modifier.
-                background(MaterialTheme.colorScheme.tertiaryContainer),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.inversePrimary
-                    ),
-                    modifier = Modifier.weight(2f)
-                ) {
-                    Text("Google")
-                }
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceTint
-                    )
-                ) {
-                    Text("Edit")
-                }
-            }
-        }
-        item(span = {GridItemSpan(6)}){
-            Row(
-                modifier = Modifier.
-                background(MaterialTheme.colorScheme.tertiaryContainer),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.inversePrimary
-                    ),
-                    modifier = Modifier.weight(2f)
-                ) {
-                    Text("iPhoneFP")
-                }
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceTint
-                    )
-                ) {
-                    Text("Edit")
-                }
-            }
-        }
-        item(span = {GridItemSpan(6)}){
-            Row(
-                modifier = Modifier.
-                background(MaterialTheme.colorScheme.tertiaryContainer),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.inversePrimary,
-                        //contentColor = Color.Black
-                    ),
-                    modifier = Modifier.weight(2f)
-                ) {
-                    Text("JavaFP")
-                }
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceTint
-                    )
-                ) {
-                    Text("Edit")
-                }
-            }
-        }
-        item(span = {GridItemSpan(6)}){
-            Row(
-                modifier = Modifier.
-                background(MaterialTheme.colorScheme.tertiaryContainer),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.inversePrimary
-                    ),
-                    modifier = Modifier.weight(2f)
-                ) {
-                    Text("JavaHTP")
-                }
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceTint
-                    )
-                ) {
-                    Text("Edit")
+                    Text("Edit", maxLines = 1)
                 }
             }
         }

@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,14 +28,18 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateMap
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import pmp.zadaca1.ui.theme.Zadaca1Theme
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,11 +77,14 @@ fun Screen(modifier : Modifier = Modifier) {
     var searchQuery by remember { mutableStateOf("") }
     var tagQuery by remember {mutableStateOf("")}
     val context = LocalContext.current
-    val translations = remember {fillHashMap(context)}
+    val translations = remember {loadTranslations(context)}
 
     LazyColumn(
         modifier = modifier
     ) {
+        val filteredList = translations.toList().filter { (key, value) ->
+            key.contains(searchQuery, ignoreCase = true) || value.contains(searchQuery, ignoreCase = true)
+        }
         item {
             Box(
                 modifier = Modifier.statusBarsPadding()
@@ -96,7 +102,6 @@ fun Screen(modifier : Modifier = Modifier) {
                 placeholder = { Text("Search a word") },
                 onValueChange = {
                     searchQuery = it
-                    val translation = translations[it]
                 },
                 shape = RoundedCornerShape(50),
                 colors = TextFieldDefaults.colors(
@@ -134,6 +139,8 @@ fun Screen(modifier : Modifier = Modifier) {
                         val key = pair[0]
                         val value = pair[1]
                         translations[key] = value
+                        saveContent(context, translations)
+                        tagQuery = ""
                     },
                     modifier = Modifier
                         .weight(2f)
@@ -143,19 +150,27 @@ fun Screen(modifier : Modifier = Modifier) {
                 }
             }
         }
-        items(translations.toList()){ record ->
+        items(filteredList){ record ->
             Row(
                 modifier = Modifier.background(MaterialTheme.colorScheme.tertiaryContainer),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.inversePrimary
                     ),
-                    modifier = Modifier.weight(2f)
+                    modifier = Modifier.weight(2f),
+                    shape = RoundedCornerShape(35)
+
                 ) {
                     val word = record.first + " - " + record.second
-                    Text(word, maxLines = 1, style = MaterialTheme.typography.headlineMedium)
+                    Text(
+                        text = word,
+                        maxLines = 1,
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
                 }
                 Button(
                     onClick = {},
@@ -172,17 +187,27 @@ fun Screen(modifier : Modifier = Modifier) {
     }
 }
 
-fun fillHashMap(context: Context) : HashMap<String, String>{
-    val map = hashMapOf<String, String>()
-    val lines: List<String> = readText(context)
-    for(line in lines){
-        val entry = line.split(' ')
-        val key = entry[0]
-        val value = entry[1]
-        map[key] = value
+fun loadTranslations(context: Context) : SnapshotStateMap<String, String>{
+    val map = mutableStateMapOf<String, String>()
+    val fileName = "nov_recnik.txt"
+    val novRecnik = File(context.filesDir, fileName)
+    val inputStream = if(novRecnik.exists()){
+        context.openFileInput(fileName)
+    }else{
+        context.resources.openRawResource(R.raw.recnik)
+    }
+
+    inputStream.bufferedReader().use { reader ->
+        reader.forEachLine { line ->
+            val pair = line.split(' ')
+            map[pair[0]] = pair[1]
+        }
     }
     return map
 }
-fun readText(context: Context) : List<String>{
-    return context.resources.openRawResource(R.raw.recnik).bufferedReader().use{it.readLines()}
+fun saveContent(context: Context, map: MutableMap<String, String>){
+    val content = map.entries.joinToString("\n") { "${it.key} ${it.value}" }
+    context.openFileOutput("nov_recnik.txt", Context.MODE_PRIVATE).use {
+        it.write(content.toByteArray())
+    }
 }

@@ -173,12 +173,14 @@ fun Screen(modifier : Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {},
+                    onClick = {
+                        tagQuery = "${record.first} ${record.second}"
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceTint
                     )
                 ) {
-                    Text("Edit", maxLines = 1)
+                    Text("Edit")
                 }
             }
         }

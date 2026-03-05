@@ -1,5 +1,6 @@
 package pmp.zadaca1
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +20,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import pmp.zadaca1.ui.theme.Zadaca1Theme
 
@@ -68,7 +73,8 @@ class MainActivity : ComponentActivity() {
 fun Screen(modifier : Modifier = Modifier) {
     var searchQuery by remember { mutableStateOf("") }
     var tagQuery by remember {mutableStateOf("")}
-    val favourites = listOf("Android FP", "Deitel", "Google", "iPhoneFP", "JavaFP", "JavaHTP")
+    val context = LocalContext.current
+    val translations = remember {fillHashMap(context)}
 
     LazyColumn(
         modifier = modifier
@@ -78,7 +84,7 @@ fun Screen(modifier : Modifier = Modifier) {
                 modifier = Modifier.statusBarsPadding()
             ) {
                 Text(
-                    text = "Favorite X Searches",
+                    text = "Thesaurus",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -87,8 +93,11 @@ fun Screen(modifier : Modifier = Modifier) {
         item {
             TextField(
                 value = searchQuery,
-                placeholder = { Text("Enter X search query here") },
-                onValueChange = { searchQuery = it },
+                placeholder = { Text("Search a word") },
+                onValueChange = {
+                    searchQuery = it
+                    val translation = translations[it]
+                },
                 shape = RoundedCornerShape(50),
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
@@ -107,7 +116,7 @@ fun Screen(modifier : Modifier = Modifier) {
             ) {
                 TextField(
                     value = tagQuery,
-                    placeholder = { Text("Tag your query") },
+                    placeholder = { Text("Enter a new word") },
                     onValueChange = { tagQuery = it },
                     shape = RoundedCornerShape(50),
                     colors = TextFieldDefaults.colors(
@@ -120,7 +129,13 @@ fun Screen(modifier : Modifier = Modifier) {
                         .height(56.dp)
                 )
                 Button(
-                    {}, modifier = Modifier
+                    {
+                        val pair = tagQuery.split(' ')
+                        val key = pair[0]
+                        val value = pair[1]
+                        translations[key] = value
+                    },
+                    modifier = Modifier
                         .weight(2f)
                         .height(56.dp)
                 ) {
@@ -128,31 +143,19 @@ fun Screen(modifier : Modifier = Modifier) {
                 }
             }
         }
-        item{
-            Row(
-                modifier = Modifier.
-                background(MaterialTheme.colorScheme.tertiaryContainer).fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ){
-                Text("Tagged searches",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    )
-            }
-        }
-        items(favourites){ tweet ->
+        items(translations.toList()){ record ->
             Row(
                 modifier = Modifier.background(MaterialTheme.colorScheme.tertiaryContainer),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
+                Card(
+                    colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.inversePrimary
                     ),
                     modifier = Modifier.weight(2f)
                 ) {
-                    Text(tweet, maxLines = 1)
+                    val word = record.first + " - " + record.second
+                    Text(word, maxLines = 1, style = MaterialTheme.typography.headlineMedium)
                 }
                 Button(
                     onClick = {},
@@ -167,4 +170,19 @@ fun Screen(modifier : Modifier = Modifier) {
 
 
     }
+}
+
+fun fillHashMap(context: Context) : HashMap<String, String>{
+    val map = hashMapOf<String, String>()
+    val lines: List<String> = readText(context)
+    for(line in lines){
+        val entry = line.split(' ')
+        val key = entry[0]
+        val value = entry[1]
+        map[key] = value
+    }
+    return map
+}
+fun readText(context: Context) : List<String>{
+    return context.resources.openRawResource(R.raw.recnik).bufferedReader().use{it.readLines()}
 }

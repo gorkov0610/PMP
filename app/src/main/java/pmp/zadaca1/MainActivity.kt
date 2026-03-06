@@ -47,147 +47,152 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Zadaca1Theme {
-                Scaffold(
-                    bottomBar = {
-                        Box(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                        ){
-                            Button(
-                                onClick = {},
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp)
-                            ) {
-                                Text("Clear Tags")
-                            }
-                        }
-                    }
-                ) {
-                    innerPadding -> Screen(modifier = Modifier.padding(innerPadding))
-                }
-
+                 Screen()
             }
         }
     }
 }
 
 @Composable
-fun Screen(modifier : Modifier = Modifier) {
+fun Screen() {
     var searchQuery by remember { mutableStateOf("") }
     var tagQuery by remember {mutableStateOf("")}
     val context = LocalContext.current
     val translations = remember {loadTranslations(context)}
-
-    LazyColumn(
-        modifier = modifier
-    ) {
-        val filteredList = translations.toList().filter { (key, value) ->
-            key.contains(searchQuery, ignoreCase = true) || value.contains(searchQuery, ignoreCase = true)
-        }
-        item {
-            Box(
-                modifier = Modifier.statusBarsPadding()
-            ) {
-                Text(
-                    text = "Thesaurus",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+    val filteredList = translations.toList().filter { (key, value) ->
+        key.contains(searchQuery, ignoreCase = true) || value.contains(
+            searchQuery,
+            ignoreCase = true
+        )
+    }
+    Scaffold(
+        bottomBar = {
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+            ){
+                Button(
+                    onClick = {
+                        filteredList.forEach { (key, _) ->
+                            translations.remove(key)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text("Delete entries")
+                }
             }
         }
-        item {
-            TextField(
-                value = searchQuery,
-                placeholder = { Text("Search a word") },
-                onValueChange = {
-                    searchQuery = it
-                },
-                shape = RoundedCornerShape(50),
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                ),
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier.padding(innerPadding).fillMaxSize(),
+
+        ) {
+            item {
+                Box(
+                    modifier = Modifier.statusBarsPadding()
+                ) {
+                    Text(
+                        text = "Thesaurus",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+            item {
                 TextField(
-                    value = tagQuery,
-                    placeholder = { Text("Enter a new word") },
-                    onValueChange = { tagQuery = it },
+                    value = searchQuery,
+                    placeholder = { Text("Search a word") },
+                    onValueChange = {
+                        searchQuery = it
+                    },
                     shape = RoundedCornerShape(50),
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent
+                        disabledIndicatorColor = Color.Transparent,
                     ),
-                    modifier = Modifier
-                        .weight(4f)
-                        .height(56.dp)
+                    modifier = Modifier.fillMaxSize()
                 )
-                Button(
-                    {
-                        val pair = tagQuery.split(' ')
-                        val key = pair[0]
-                        val value = pair[1]
-                        translations[key] = value
-                        saveContent(context, translations)
-                        tagQuery = ""
-                    },
+            }
+            item {
+                Row(
                     modifier = Modifier
-                        .weight(2f)
-                        .height(56.dp)
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
                 ) {
-                    Text("Save")
+                    TextField(
+                        value = tagQuery,
+                        placeholder = { Text("Enter a new word") },
+                        onValueChange = { tagQuery = it },
+                        shape = RoundedCornerShape(50),
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier
+                            .weight(4f)
+                            .height(56.dp)
+                    )
+                    Button(
+                        {
+                            val pair = tagQuery.split(' ')
+                            val key = pair[0]
+                            val value = pair[1]
+                            translations[key] = value
+                            saveContent(context, translations)
+                            tagQuery = ""
+                        },
+                        modifier = Modifier
+                            .weight(2f)
+                            .height(56.dp)
+                    ) {
+                        Text("Save")
+                    }
                 }
             }
-        }
-        items(filteredList){ record ->
-            Row(
-                modifier = Modifier.background(MaterialTheme.colorScheme.tertiaryContainer),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.inversePrimary
-                    ),
-                    modifier = Modifier.weight(2f),
-                    shape = RoundedCornerShape(35)
+            items(filteredList) { record ->
+                Row(
+                    modifier = Modifier.background(MaterialTheme.colorScheme.tertiaryContainer),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.inversePrimary
+                        ),
+                        modifier = Modifier.weight(2f),
+                        shape = RoundedCornerShape(35)
 
-                ) {
-                    val word = record.first + " - " + record.second
-                    Text(
-                        text = word,
-                        maxLines = 1,
-                        style = MaterialTheme.typography.headlineMedium,
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    )
-                }
-                Button(
-                    onClick = {
-                        tagQuery = "${record.first} ${record.second}"
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceTint
-                    )
-                ) {
-                    Text("Edit")
+                    ) {
+                        val word = record.first + " - " + record.second
+                        Text(
+                            text = word,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.headlineMedium,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            tagQuery = "${record.first} ${record.second}"
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceTint
+                        )
+                    ) {
+                        Text("Edit")
+                    }
                 }
             }
+
+
         }
-
-
+        }
     }
-}
 
 fun loadTranslations(context: Context) : SnapshotStateMap<String, String>{
     val map = mutableStateMapOf<String, String>()

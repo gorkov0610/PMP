@@ -76,6 +76,7 @@ fun Screen() {
                         filteredList.forEach { (key, _) ->
                             translations.remove(key)
                         }
+                        saveContent(context, translations)
                     },
                     modifier = Modifier
                         .fillMaxWidth()

@@ -1,221 +1,321 @@
 package pmp.zadaca1
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.ContextCompat
 import pmp.zadaca1.ui.theme.Zadaca1Theme
-import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
         setContent {
             Zadaca1Theme {
-                 Screen()
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding(),
+                ) {
+                    DessertClickerApp(desserts = Datasource.dessertList)
+                }
             }
+        }
+    }
+}
+
+/**
+ * Determine which dessert to show.
+ */
+fun determineDessertToShow(
+    desserts: List<Dessert>,
+    dessertsSold: Int
+): Dessert {
+    var dessertToShow = desserts.first()
+    for (dessert in desserts) {
+        if (dessertsSold >= dessert.startProductionAmount) {
+            dessertToShow = dessert
+        } else {
+            // The list of desserts is sorted by startProductionAmount. As you sell more desserts,
+            // you'll start producing more expensive desserts as determined by startProductionAmount
+            // We know to break as soon as we see a dessert who's "startProductionAmount" is greater
+            // than the amount sold.
+            break
+        }
+    }
+
+    return dessertToShow
+}
+
+/**
+ * Share desserts sold information using ACTION_SEND intent
+ */
+private fun shareSoldDessertsInformation(intentContext: Context, dessertsSold: Int, revenue: Int) {
+    val sendIntent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(
+            Intent.EXTRA_TEXT,
+            intentContext.getString(R.string.share_text, dessertsSold, revenue)
+        )
+        type = "text/plain"
+    }
+
+    val shareIntent = Intent.createChooser(sendIntent, null)
+
+    try {
+        ContextCompat.startActivity(intentContext, shareIntent, null)
+    } catch (e: ActivityNotFoundException) {
+        Toast.makeText(
+            intentContext,
+            intentContext.getString(R.string.sharing_not_available),
+            Toast.LENGTH_LONG
+        ).show()
+    }
+}
+
+@Composable
+private fun DessertClickerApp(
+    desserts: List<Dessert>
+) {
+
+    var revenue by remember { mutableStateOf(0) }
+    var dessertsSold by remember { mutableStateOf(0) }
+
+    val currentDessertIndex by remember { mutableStateOf(0) }
+
+    var currentDessertPrice by remember {
+        mutableStateOf(desserts[currentDessertIndex].price)
+    }
+    var currentDessertImageId by remember {
+        mutableStateOf(desserts[currentDessertIndex].imageId)
+    }
+
+    Scaffold(
+        topBar = {
+            val intentContext = LocalContext.current
+            val layoutDirection = LocalLayoutDirection.current
+            DessertClickerAppBar(
+                onShareButtonClicked = {
+                    shareSoldDessertsInformation(
+                        intentContext = intentContext,
+                        dessertsSold = dessertsSold,
+                        revenue = revenue
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = WindowInsets.safeDrawing.asPaddingValues()
+                            .calculateStartPadding(layoutDirection),
+                        end = WindowInsets.safeDrawing.asPaddingValues()
+                            .calculateEndPadding(layoutDirection),
+                    )
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+        }
+    ) { contentPadding ->
+        DessertClickerScreen(
+            revenue = revenue,
+            dessertsSold = dessertsSold,
+            dessertImageId = currentDessertImageId as Int,
+            onDessertClicked = {
+
+                // Update the revenue
+                revenue += currentDessertPrice
+                dessertsSold++
+
+                // Show the next dessert
+                val dessertToShow = determineDessertToShow(desserts, dessertsSold)
+                currentDessertImageId = dessertToShow.imageId
+                currentDessertPrice = dessertToShow.price
+            },
+            modifier = Modifier.padding(contentPadding)
+        )
+    }
+}
+
+@Composable
+private fun DessertClickerAppBar(
+    onShareButtonClicked: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.app_name),
+            modifier = Modifier.padding(start = dimensionResource(R.dimen.padding_medium)),
+            color = MaterialTheme.colorScheme.onPrimary,
+            style = MaterialTheme.typography.titleLarge,
+        )
+        IconButton(
+            onClick = onShareButtonClicked,
+            modifier = Modifier.padding(end = dimensionResource(R.dimen.padding_medium)),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Share,
+                contentDescription = stringResource(R.string.share),
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
         }
     }
 }
 
 @Composable
-fun Screen() {
-    var searchQuery by remember { mutableStateOf("") }
-    var tagQuery by remember {mutableStateOf("")}
-    val context = LocalContext.current
-    val translations = remember {loadTranslations(context)}
-    val filteredList = translations.toList().filter { (key, value) ->
-        key.contains(searchQuery, ignoreCase = true) || value.contains(
-            searchQuery,
-            ignoreCase = true
+fun DessertClickerScreen(
+    revenue: Int,
+    dessertsSold: Int,
+    @DrawableRes dessertImageId: Int,
+    onDessertClicked: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        Image(
+            painter = painterResource(R.drawable.bakery_back),
+            contentDescription = null,
+            contentScale = ContentScale.Crop
         )
-    }
-    Scaffold(
-        bottomBar = {
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-            ){
-                Button(
-                    onClick = {
-                        filteredList.forEach { (key, _) ->
-                            translations.remove(key)
-                        }
-                        saveContent(context, translations)
-                    },
+        Column {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) {
+                Image(
+                    painter = painterResource(dessertImageId),
+                    contentDescription = null,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                ) {
-                    Text("Delete entries")
-                }
-            }
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.padding(innerPadding).fillMaxSize(),
-
-        ) {
-            item {
-                Box(
-                    modifier = Modifier.statusBarsPadding()
-                ) {
-                    Text(
-                        text = "Thesaurus",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            }
-            item {
-                TextField(
-                    value = searchQuery,
-                    placeholder = { Text("Search a word") },
-                    onValueChange = {
-                        searchQuery = it
-                    },
-                    shape = RoundedCornerShape(50),
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                    ),
-                    modifier = Modifier.fillMaxSize()
+                        .width(dimensionResource(R.dimen.image_size))
+                        .height(dimensionResource(R.dimen.image_size))
+                        .align(Alignment.Center)
+                        .clickable { onDessertClicked() },
+                    contentScale = ContentScale.Crop,
                 )
             }
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                ) {
-                    TextField(
-                        value = tagQuery,
-                        placeholder = { Text("Enter a new word") },
-                        onValueChange = { tagQuery = it },
-                        shape = RoundedCornerShape(50),
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier
-                            .weight(4f)
-                            .height(56.dp)
-                    )
-                    Button(
-                        {
-                            val pair = tagQuery.split(' ')
-                            val key = pair[0]
-                            val value = pair[1]
-                            translations[key] = value
-                            saveContent(context, translations)
-                            tagQuery = ""
-                        },
-                        modifier = Modifier
-                            .weight(2f)
-                            .height(56.dp)
-                    ) {
-                        Text("Save")
-                    }
-                }
-            }
-            items(filteredList) { record ->
-                Row(
-                    modifier = Modifier.background(MaterialTheme.colorScheme.tertiaryContainer),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.inversePrimary
-                        ),
-                        modifier = Modifier.weight(2f),
-                        shape = RoundedCornerShape(35)
-
-                    ) {
-                        val word = record.first + " - " + record.second
-                        Text(
-                            text = word,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-                    }
-                    Button(
-                        onClick = {
-                            tagQuery = "${record.first} ${record.second}"
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceTint
-                        )
-                    ) {
-                        Text("Edit")
-                    }
-                }
-            }
-
-
-        }
+            TransactionInfo(
+                revenue = revenue,
+                dessertsSold = dessertsSold,
+                modifier = Modifier.background(MaterialTheme.colorScheme.secondaryContainer)
+            )
         }
     }
-
-fun loadTranslations(context: Context) : SnapshotStateMap<String, String>{
-    val map = mutableStateMapOf<String, String>()
-    val fileName = "nov_recnik.txt"
-    val novRecnik = File(context.filesDir, fileName)
-    val inputStream = if(novRecnik.exists()){
-        context.openFileInput(fileName)
-    }else{
-        context.resources.openRawResource(R.raw.recnik)
-    }
-
-    inputStream.bufferedReader().use { reader ->
-        reader.forEachLine { line ->
-            val pair = line.split(' ')
-            map[pair[0]] = pair[1]
-        }
-    }
-    return map
 }
-fun saveContent(context: Context, map: MutableMap<String, String>){
-    val content = map.entries.joinToString("\n") { "${it.key} ${it.value}" }
-    context.openFileOutput("nov_recnik.txt", Context.MODE_PRIVATE).use {
-        it.write(content.toByteArray())
+
+@Composable
+private fun TransactionInfo(
+    revenue: Int,
+    dessertsSold: Int,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        DessertsSoldInfo(
+            dessertsSold = dessertsSold,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.padding_medium))
+        )
+        RevenueInfo(
+            revenue = revenue,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.padding_medium))
+        )
+    }
+}
+
+@Composable
+private fun RevenueInfo(revenue: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = stringResource(R.string.total_revenue),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+        Text(
+            text = "$${revenue}",
+            textAlign = TextAlign.Right,
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
+}
+
+@Composable
+private fun DessertsSoldInfo(dessertsSold: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = stringResource(R.string.dessert_sold),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+        Text(
+            text = dessertsSold.toString(),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
+}
+
+@Preview
+@Composable
+fun MyDessertClickerAppPreview() {
+    Zadaca1Theme() {
+        DessertClickerApp(listOf(Dessert(R.drawable.cupcake, 5, 0)))
     }
 }
